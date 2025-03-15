@@ -97,6 +97,7 @@ DISPLAY-MAIN-SCREEN.
     END-IF.
 
     IF WS-MESSAGE = 'Z'
+        *>STUFF WHEN WE FIGURE OUT ROLL
         CALL "ROLL-TEST" USING
             WS-DieTotal
         DISPLAY WS-DieTotal
