@@ -4,9 +4,10 @@ PROGRAM-ID. CRAPS-DISPLAY.
 DATA DIVISION.
 
 WORKING-STORAGE SECTION.
-01 WS-PLAYER-INPUT      PIC X(10) VALUE SPACES.
-01 WS-MESSAGE           PIC X(1) VALUE SPACES.
-01 WS-DieTotal          PIC Z(2). 
+01 WS-PLAYER-INPUT      PIC X(1) VALUE SPACES.
+01 WS-MESSAGE           PIC X(1) VALUE 'N'.
+01 WS-DieTotal          PIC Z(2).
+01 WS-TEMP              PIC Z(5). 
 
 LINKAGE SECTION.
 01 LK-PASS-BET          PIC Z(5).
@@ -28,14 +29,28 @@ SCREEN SECTION.
 
 
 01 CRAPS-BOARD BACKGROUND-COLOR 2 FOREGROUND-COLOR 7 HIGHLIGHT.
-    02 LINE 10 COL 4 VALUE "	  ______________________________________".
+    02 LINE 10 COL 4 VALUE "	______________________________________".
     02 LINE 11 COL 4 VALUE "   /  | Don't |   |   |   |   |   |   |   |".
-    02 LINE 12 COL 4 VALUE "COME BET: ".
-    02 LINE 13 COL 4 VALUE "DON'T COME BET: ".
+    02 LINE 12 COL 4 VALUE "  /|  | Come: | 4 | 5 | 6 | 7 | 8 | 9 | 10|".
+    02 LINE 13 COL 4 VALUE " / |  | ##### |-----------------|---------|".
+    02 LINE 13 COL 12 USING LK-DONT-COME-BET.
+    02 LINE 14 COL 4 VALUE "/  |  |_______|_________________|".
+    02 LINE 15 COL 4 VALUE "|  |  \ COME: #####      OFF    |".
+    02 LINE 15 COL 18 USING LK-COME-BET.
+    02 LINE 16 COL 4 VALUE "|  |___\________________________|".
+    02 LINE 17 COL 4 VALUE "|  |   |Don't Pass Bar: #####   |".
+    02 LINE 17 COL 28 USING LK-DONT-PASS-BET.
+    02 LINE 18 COL 4 VALUE "|  \___|________________________|".
+    02 LINE 19 COL 4 VALUE "|       Pass Line: #####        |".
+    02 LINE 19 COL 23 USING LK-PASS-BET.
+    02 LINE 20 COL 4 VALUE "\_______________________________|".
+
+
+
 
 01 GENERIC-MENU BACKGROUND-COLOR 2 FOREGROUND-COLOR 7 HIGHLIGHT. 
-    02 LINE 20 COL 4 VALUE "1. BET PASS".
-    02 LINE 21 COL 4 VALUE "2. BET DON'T PASS".
+    02 LINE 22 COL 4 VALUE "1. BET PASS".
+    02 LINE 23 COL 4 VALUE "2. BET DON'T PASS".
     02 LINE 24 COL 4 VALUE "Press ENTER to Roll the dice".
 
 
@@ -45,7 +60,7 @@ SCREEN SECTION.
 
 01 PASS-BET BACKGROUND-COLOR 2 FOREGROUND-COLOR 7 HIGHLIGHT.
     02 LINE 20 COL 4 VALUE "How much would you like to bet: ".
-    02 LINE 20 COL 36 USING LK-PASS-BET.
+    02 LINE 20 COL 36 USING WS-TEMP.
 
 01 ROLL-MENU BACKGROUND-COLOR 2 FOREGROUND-COLOR 7 HIGHLIGHT.
     02 LINE 20 COL 4 VALUE " Roll".
