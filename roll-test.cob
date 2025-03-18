@@ -7,7 +7,7 @@
        01 L PIC 9.
 
        LINKAGE SECTION.
-       01 DieTotal PIC Z(2).
+       01 DieTotal PIC 9(2).
 
        PROCEDURE DIVISION USING DieTotal.
        PERFORM DO-ROLL 1 TIMES.

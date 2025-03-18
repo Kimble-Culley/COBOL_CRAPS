@@ -6,17 +6,19 @@ DATA DIVISION.
 WORKING-STORAGE SECTION.
 01 WS-PLAYER-INPUT      PIC X(1) VALUE SPACES.
 01 WS-MESSAGE           PIC X(1) VALUE 'N'.
-01 WS-DieTotal          PIC Z(2).
+01 WS-DieTotal          PIC 9(2).
 01 WS-TEMP              PIC Z(5).
-01 WS-GAMESTATE         PIC 9(1).
+01 WS-GAMESTATE         PIC 9(1) VALUE 0.
 01 WS-POINT             PIC 9(2).
-01 WS-BALANCE           PIC 9(5). 
+01 WS-MONEY             PIC 9(5) VALUE 500. 
+
+01 WS-VARIABLE          PIC Z(1).
 
 LINKAGE SECTION.
-01 LK-PASS-BET          PIC Z(5).
-01 LK-DONT-PASS-BET     PIC Z(5).
-01 LK-COME-BET          PIC Z(5).
-01 LK-DONT-COME-BET     PIC Z(5).
+01 LK-PASS-BET          PIC 9(5).
+01 LK-DONT-PASS-BET     PIC 9(5).
+01 LK-COME-BET          PIC 9(5).
+01 LK-DONT-COME-BET     PIC 9(5).
 
 SCREEN SECTION.
 01 CRAPS-LOGO BACKGROUND-COLOR 2 FOREGROUND-COLOR 7  HIGHLIGHT.
@@ -32,10 +34,10 @@ SCREEN SECTION.
 
 
 01 CRAPS-BOARD BACKGROUND-COLOR 2 FOREGROUND-COLOR 7 HIGHLIGHT.
-    02 LINE 10 COL 4 VALUE "	______________________________________".
-    02 LINE 11 COL 4 VALUE "   /  | Don't |   |   |   |   |   |   |   |".
-    02 LINE 12 COL 4 VALUE "  /|  | Come: | 4 | 5 | 6 | 7 | 8 | 9 | 10|".
-    02 LINE 13 COL 4 VALUE " / |  | ##### |-----------------|---------|".
+    02 LINE 10 COL 4 VALUE "	___________________________________".
+    02 LINE 11 COL 4 VALUE "   /  | Don't |   |   |   |   |   |   |".
+    02 LINE 12 COL 4 VALUE "  /|  | Come: | 4 | 5 | 6 | 8 | 9 | 10|".
+    02 LINE 13 COL 4 VALUE " / |  | ##### |-----------------|-----|".
     02 LINE 13 COL 12 USING LK-DONT-COME-BET.
     02 LINE 14 COL 4 VALUE "/  |  |_______|_________________|".
     02 LINE 15 COL 4 VALUE "|  |  \ COME: #####      OFF    |".
@@ -46,7 +48,8 @@ SCREEN SECTION.
     02 LINE 18 COL 4 VALUE "|  \___|________________________|".
     02 LINE 19 COL 4 VALUE "|       Pass Line: #####        |".
     02 LINE 19 COL 23 USING LK-PASS-BET.
-    02 LINE 20 COL 4 VALUE "\_______________________________|".
+    02 LINE 20 COL 4 VALUE "\_______________________________| BALANCE: ".
+    02 LINE 20 COL 47 USING WS-MONEY.
 
 
 
@@ -67,20 +70,28 @@ SCREEN SECTION.
     02 LINE 25 COL 16 USING WS-PLAYER-INPUT.
 
 01 BET-INPUT BACKGROUND-COLOR 2 FOREGROUND-COLOR 7 HIGHLIGHT.
-    02 LINE 20 COL 4 VALUE "How much would you like to bet: ".
-    02 LINE 20 COL 36 USING WS-TEMP.
+    02 LINE 21 COL 4 VALUE "How much would you like to bet: ".
+    02 LINE 21 COL 36 USING WS-TEMP.
 
 01 ROLL-MENU BACKGROUND-COLOR 2 FOREGROUND-COLOR 7 HIGHLIGHT.
-    02 LINE 20 COL 4 VALUE " Roll".
+    02 LINE 21 COL 4 VALUE " Roll".
 
 01 TEMP-MENU BACKGROUND-COLOR 2 FOREGROUND-COLOR 7 HIGHLIGHT.
-    02 LINE 21 COL 4 USING WS-PLAYER-INPUT.
+    02 LINE 22 COL 4 USING WS-PLAYER-INPUT.
+
+01 FAIL-STATE BACKGROUND-COLOR 2 FOREGROUND-COLOR 7 HIGHLIGHT.
+    02 LINE 22 COL 4 VALUE "Max bet for this table is 200.".
+    02 LINE 23 COL 4 VALUE "You either bet too much,".
+    02 LINE 24 COL 4 VALUE "or you don't have enough money".
+    02 LINE 25 COL 4 VALUE "Press ENTER to continue.".     
 
 PROCEDURE DIVISION USING LK-PASS-BET LK-DONT-PASS-BET LK-COME-BET LK-DONT-COME-BET.
 
 DISPLAY-MAIN-SCREEN.
+
     DISPLAY CRAPS-LOGO.
     DISPLAY CRAPS-BOARD.
+    CALL "DICE-DISPLAY" USING WS-DieTotal
 
     IF WS-MESSAGE = 'N'
         IF WS-GAMESTATE = 0
@@ -110,27 +121,78 @@ DISPLAY-MAIN-SCREEN.
     IF WS-MESSAGE = 'X'
         DISPLAY CRAPS-LOGO
         DISPLAY CRAPS-BOARD
-        DISPLAY PASS-BET
-        ACCEPT LK-PASS-BET
-        MOVE 'N' TO WS-MESSAGE
-    END-IF.
+        DISPLAY BET-INPUT
+
+        IF WS-GAMESTATE = 0
+            ACCEPT LK-PASS-BET
+            IF LK-PASS-BET > 200 OR LK-PASS-BET > WS-MONEY
+                DISPLAY FAIL-STATE
+                MOVE 0 TO LK-PASS-BET
+                MOVE 'N' TO WS-MESSAGE
+                ACCEPT WS-VARIABLE
+            END-IF
+            
+            SUBTRACT LK-PASS-BET FROM WS-MONEY GIVING WS-MONEY
+            MOVE 'N' TO WS-MESSAGE
+        END-IF
+
+        IF WS-GAMESTATE = 1
+            ACCEPT LK-COME-BET
+            IF LK-COME-BET > 200 OR  LK-COME-BET > WS-MONEY
+                DISPLAY FAIL-STATE
+                MOVE 0 TO LK-COME-BET
+                MOVE 'N' TO WS-MESSAGE
+                ACCEPT WS-VARIABLE
+            END-IF
+
+            SUBTRACT LK-COME-BET FROM WS-MONEY GIVING WS-MONEY
+            MOVE 'N' TO WS-MESSAGE
+        END-IF
+    END-IF
+
 
     IF WS-MESSAGE = 'Y'
         DISPLAY CRAPS-LOGO
         DISPLAY CRAPS-BOARD
-        DISPLAY PASS-BET
-        ACCEPT LK-DONT-PASS-BET
-        MOVE 'N' TO WS-MESSAGE
-    END-IF.
+        DISPLAY BET-INPUT
+
+        IF WS-GAMESTATE = 0
+            ACCEPT LK-DONT-PASS-BET
+            IF LK-DONT-PASS-BET > 200 OR LK-DONT-PASS-BET > WS-MONEY
+                DISPLAY FAIL-STATE
+                MOVE 0 TO LK-DONT-PASS-BET
+                MOVE 'N' TO WS-MESSAGE
+                ACCEPT WS-VARIABLE
+            END-IF
+            
+            SUBTRACT LK-DONT-PASS-BET FROM WS-MONEY GIVING WS-MONEY
+            MOVE 'N' TO WS-MESSAGE
+        END-IF
+    
+
+        IF WS-GAMESTATE = 1
+            ACCEPT LK-DONT-COME-BET
+            IF LK-DONT-COME-BET > 200 OR LK-DONT-COME-BET > WS-MONEY
+                DISPLAY FAIL-STATE
+                MOVE 0 TO LK-DONT-COME-BET
+                MOVE 'N' TO WS-MESSAGE
+                ACCEPT WS-VARIABLE
+            END-IF
+
+            SUBTRACT LK-DONT-COME-BET FROM WS-MONEY GIVING WS-MONEY
+            MOVE 'N' TO WS-MESSAGE
+        END-IF
+    END-IF
 
     IF WS-MESSAGE = 'Z'
         *>STUFF WHEN WE FIGURE OUT ROLL
-        CALL "ROLL-TEST" USING
-            WS-DieTotal
-        DISPLAY WS-DieTotal
+        CALL "ROLL-TEST" USING WS-DieTotal
         MOVE 'N' TO WS-MESSAGE
     END-IF.
 
+
+
+    MOVE 'N' TO WS-MESSAGE.
     MOVE ' ' TO WS-PLAYER-INPUT.
     GO TO DISPLAY-MAIN-SCREEN.
     STOP RUN.
